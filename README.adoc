@@ -15,7 +15,7 @@ In this repository :-)
 Homework::
 Homework tasks are not distributed, but they followed
 http://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf[Ray
-Trancing in a Weekend] pretty closely.
+Tracing in a Weekend] pretty closely.
 
 ## Building
 
