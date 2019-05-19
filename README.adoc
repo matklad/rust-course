@@ -12,6 +12,10 @@ https://www.youtube.com/playlist?list=PLlb7e2G7aSpTfhiECYNI2EZ1uAluUqE_e
 Slides::
 In this repository :-)
 
+Homework::
+Homework tasks are not distributed, but they followed
+http://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf[Ray
+Trancing in a Weekend] pretty closely.
 
 ## Building
 
@@ -35,4 +39,4 @@ project is used to build the slides.
 This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
 ++++
 
-Asciidoctor.js PDF is vendored into this repository and is licensed under the MIT license. 
+Asciidoctor.js PDF is vendored into this repository and is licensed under the MIT license.
