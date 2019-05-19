@@ -1,0 +1,9 @@
+= Rust 2019
+Алексей Кладов <aleksey.kladov@gmail.com>
+:icons: font
+:lecture: Лекция N: Тема Лекции
+:table-caption!:
+:example-caption!:
+
+[.title-slide]
+== Раздел

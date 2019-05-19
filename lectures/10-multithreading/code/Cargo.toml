@@ -1,0 +1,18 @@
+[package]
+name = "examples"
+version = "0.0.0"
+
+[dependencies]
+crossbeam = "0.7.1"
+
+[[bin]]
+name = "crossbeam_scope"
+path = "./crossbeam_scope.rs"
+
+[[bin]]
+name = "racy"
+path = "./racy.rs"
+
+[[bin]]
+name = "non-racy"
+path = "./non-racy.rs"

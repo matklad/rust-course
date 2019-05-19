@@ -1,0 +1,38 @@
+# Rust Course
+
+Slides for Rust course taught in https://compscicenter.ru/[Computer Science
+Center] in Winter-Spring 2019 (in Russian).
+
+Course Page::
+https://compscicenter.ru/courses/rustprogramming/2019-spring/
+
+Video::
+https://www.youtube.com/playlist?list=PLlb7e2G7aSpTfhiECYNI2EZ1uAluUqE_e
+
+Slides::
+In this repository :-)
+
+
+## Building
+
+[src,bash]
+----
+$ npm install
+$ npm run adoc -- ./lectures/01-intro/slides.adoc
+$ pdf-viewer ./lectures/01-intro/slides.pdf
+----
+
+Awesome https://github.com/Mogztter/asciidoctor-pdf.js/[Asciidoctor.js PDF]
+project is used to build the slides.
+
+## License
+
+++++
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/">
+<img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png"/>
+</a>
+<br/>
+This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+++++
+
+Asciidoctor.js PDF is vendored into this repository and is licensed under the MIT license. 

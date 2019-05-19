@@ -1,0 +1,581 @@
+= Rust 2019
+Алексей Кладов <aleksey.kladov@gmail.com>
+:icons: font
+:lecture: Лекция 9: Умные Указатели, static
+:table-caption!:
+:example-caption!:
+
+[.title-slide]
+== const
+
+== const
+
+[source,rust]
+----
+include::code/const.rs[]
+----
+
+[.language-rust]`const` -- конструкция верхнего уровня
+
+Тип нужно указывать явно
+
+== const
+
+TIP: Байты [.language-rust]`const` находятся в `.text` (неизменяемой) секции
+исполняемого файла
+
+Константа вычисляется во время компиляции
+
+Можно использовать арифметику, литералы, простые выражения и
+[.language-rust]`const fn` функции
+
+[source,rust]
+----
+impl<T> Cell<T> {
+    pub const fn new(value: T) -> Cell<T> {
+        Cell {
+            value: UnsafeCell::new(value),
+        }
+    }
+----
+
+== match
+
+.Константы можно использовать в [.language-rust]`match`:
+[source,rust]
+----
+include::code/match.rs[]
+----
+
+<1> сравнили `x` c нулём
+<2> записали `x` в `other`
+
+WARNING: Семантика зависит от наличия константы в области видимости
+
+== !
+
+.[.language-rust]`const` можно использовать в [.language-rust]`impl`:
+[source,rust]
+----
+include::code/tag.rs[]
+----
+
+[.title-slide]
+== Области Видимости
+
+== Видимость
+
+Константы (как и любые конструкции верхнего уровня) можно объявлять внутри блока
+
+Для них создаётся невидимый модуль, порядок объявления не важен
+
+[source,rust]
+----
+include::code/pi.rs[]
+----
+
+== Локальные Функции
+
+.Функцию тоже можно объявить внутри блока, но она не будет замыканием:
+
+[source,rust]
+----
+include::code/local_fn.rs[]
+----
+
+== Локальный Мир
+
+.Модули тоже можно объявлять локально:
+
+[source,rust]
+----
+include::code/local_mod.rs[]
+----
+
+== Пространства имён
+
+В Rust есть два непересекающихся пространства имён (a-la Lips-2): "типы" и
+"значения":
+
+[source,rust]
+----
+include::code/ns.rs[]
+----
+
+На практике коллизий мало, из-за разных соглашений об именовании
+
+== Пространства имён
+
+Unit и tuple структуры рассахариваются в определение типа и функции/константы
+
+[source,rust]
+----
+include::code/struct_sugar.rs[]
+----
+
+<1> создали тип `S` и [.language-rust]`const S: S`
+<2> создали тип `T` и [.language-rust]`+fn T(_0: u32, _1: i32) -> T+`
+
+`None` -- константа типа `Option<T>`
+
+`Some` -- функция типа [.language-rust]`+fn(T) -> Option<T>+`
+
+[.title-slide]
+== 'static
+
+== 'static
+
+На константы можно брать ссылку
+
+вж -- [.language-rust]`'static`, больше любого другого времени жизни
+
+[source,rust]
+----
+include::code/static_lifetime.rs[]
+----
+
+== Lifetime Elision
+
+В константах работает lifetime elision, результат -- [.language-rust]`'static`
+
+[source,rust]
+----
+include::code/static_elision.rs[]
+----
+
+Тип строковго литерала -- [.language-rust]`&'static str`
+
+Тип байтового литерала -- [.language-rust]`&'static [u8; _]`
+
+[source,rust]
+----
+include::code/static_array.rs[]
+----
+
+== Строковые литералы
+
+[source,rust,subs="+quotes"]
+----
+ "hello": &'static str     // байты в utf-8
+b"hello": &'static [u8; 5] // байты в ASCII
+
+ 'a': char  // 32 бита
+b'a': u8
+
+ "hello\nworld"     // обычное экранирование через \
+ [hl-string]##"hello
+world"##              // многострочный литерал
+
+ [hl-string]##"hello \##           // \ убирает \n и пробелы после него
+  [hl-string]##world"##
+
+r"hello\nworld"     // сырой литерал, \ это \
+----
+[source]
+----
+r###"raw literal with "## inside!"###
+----
+
+== []
+
+У `[]` тип [.language-rust]`&'static []`, пустые слайсы можно извлекать из
+воздуха
+
+[source,rust]
+----
+fn as_slice<'a>(xs: Option<&'a Vec<i32>>) -> &'a [i32] {
+    match xs {
+        Some(xs) => xs.as_slice(),
+        None => &[],
+    }
+}
+----
+
+== Box::leak
+
+Ещё один способ получить вж [.language-rust]`'static` это пообещать, что память
+никогда не будет освобождена
+
+[source,rust]
+----
+include::code/leak.rs[]
+----
+
+* после вызова `into_raw` память не будет освобождена
+
+* можно получить *любое* вж (но [.language-rust]`'static` -- самый интересный случай)
+
+== dyn T + 'static
+
+.У [.language-rust]`dyn T` типов тоже есть lifetime:
+
+[source,rust]
+----
+include::code/dyn.rs[]
+----
+
+* [.language-rust]`Box<dyn T> == Box<dyn T + 'static>`
+* [.language-rust]`&'a dyn T == &'a (dyn T + 'a)`
+* [.language-rust]`dyn T == dyn T +'static`
+
+[.title-slide]
+== static
+
+== static
+
+[.language-rust]`const` пишет в .text секцию, [.language-rust]`static` -- в
+изменяемую .data секцию
+
+[source,rust]
+----
+include::code/static_counter.rs[]
+----
+
+== static mut
+
+[source,rust,subs="+quotes"]
+----
+static mut COUNTER: usize = 0;
+
+fn main() {
+    [hl-error]##COUNTER += 1##;            // use of mutable static is unsafe
+    println!("{}", [hl-error]##COUNTER##); // and requires unsafe function
+}                            // or block
+----
+
+Использовать [.language-rust]`static mut` так просто нельзя...
+
+== static mut
+
+[source,rust]
+----
+static mut X: usize = 0;
+
+pub fn sneaky() -> &'static mut usize {
+    &mut X
+}
+
+fn main() {
+    let x1: &mut usize = sneaky();
+    let x2: &mut usize = sneaky(); // алиасинг!
+}
+----
+
+При операциях со [.language-rust]`static mut`, вызывающий код должен
+гарантировать, что не создаётся алиасинг
+
+NOTE: Глобальные переменные доступны всем (`&`)
+
+== static + interior mutability
+
+[source,rust]
+----
+use std::cell::Cell;
+
+static COUNTER: Cell<usize> = Cell::new(0);
+
+fn main() {
+    COUNTER.set(COUNTER.get() + 1);
+    println!("{}", COUNTER.get());
+}
+----
+
+Казалось бы, должно работать: не врём про [.language-rust]`mut`
+
+Не работает из-за многопоточности
+
+CAUTION: В Rust глобальные переменные имеют _объективные_ недостатки
+
+== Life Before Main
+
+Так же, как и [.language-rust]`const`, [.language-rust]`static` это просто байты
+в бинарном файле
+
+NOTE: [.language-rust]`static` можно инициализировать только константой
+
+В C++, Java, Swift etc глобальную переменную можно инициализировать чем угодно,
+инициализация происходит при первом обращении или до main
+
+В Rust нет жизни до `main`, ленивую инициализацию надо писать явно (a-la
+`OnceCell`).
+
+[.title-slide]
+== Умные Указатели
+
+== Owning Smart Pointers
+
+Умный указатель управляет доступом к ресурсу
+
+[.language-rust]`Box<T>` -- главный умный указатель, управляет памятью, вызывает
+`free` в `drop`
+
+[.language-rust]`Vec<T>` -- тоже умный указатель, `Box` для нескольких значений
+
+NOTE: `Vec<T>` это не просто коллекция, а стратегия управления памятью
+
+== Borrowing Smart Pointers
+
+[.language-rust]`cell::Ref<'a, T>` и [.language-rust]`cell::RefMut<'a, T>` --
+умные заимствующие указатели
+
+Оборачивают `&T` / [.language-rust]`&mut T` и в `Drop` уменьшают счётчик ссылок
+на `RefCell<T>`
+
+== Deref
+
+.Умные указатели реализуют `Deref` / `DerefMut`:
+* [.language-rust]`impl<T> Deref<Target = [T]> for Vec<T>`
+* [.language-rust]`impl<T> DerefMut for Vec<T>`
+* [.language-rust]`impl<'a, T> Deref<Target = T> for Ref<'a, T>`
+* ...
+
+== !
+.Паттерн: ассоциированная функция лучше метода
+[source,rust,subs="+quotes"]
+----
+impl Box<T> {
+    fn leak<'a>(##b:## Box<T>) -> &'a T { ... }
+}
+----
+
+[source,rust]
+----
+include::code/upper.rs[]
+----
+
+Метод мог бы конфликтовать с методом на типе (`pipe.leak()`)
+
+== !
+
+[source,rust]
+----
+impl<'a, T> Ref<'a, T> {
+    pub fn map<U, F>(orig: Ref<'a, T>, f: F) -> Ref<'a, U>
+    where
+        F: FnOnce(&T) -> &U,
+        U: ?Sized,
+}
+----
+
+.`Ref::map` -- проекция:
+[source,rust]
+----
+include::code/ref_proj.rs[]
+----
+
+== std::rc::Rc
+
+`Rc<T>`::
+ **R**eference **C**ounting owning smart pointer
+
+`Rc` это Box с `O(1)` клонированием ([.language-rust]`impl<T> Clone for Rc<T>`)
+
+[source,rust]
+----
+include::code/rc.rs[]
+----
+
+`Rc<T>` реализует `Deref<Target = T>`, но не `DerefMut`: `Rc` разделяется между
+несколькими владельцами, уникальной ссылки быть не может
+
+== std::rc::Rc
+
+Внутри лежит `RcBox`
+
+[source,rust]
+----
+struct RcBox<T: ?Sized> {
+    strong: Cell<usize>,
+    weak: Cell<usize>,
+    value: T,
+}
+----
+
+* Нужен `Cell`: `clone` получает `&` ссылку, но мы должны увеличить счётчик
+ссылок.
+* Значение и счётчик ссылок всегда аллоцированны вместе =>  нет необходимости в `std::make_shared`
+
+== std::rc::Rc::make_mut
+
+[source,rust]
+----
+impl<T: Clone> Rc<T> {
+    pub  fn make_mut(this: &mut Self) -> &mut T { ... }
+}
+----
+
+`make_mut` -- магический метод, если rc == 1, то возвращаем ссылку на данные,
+иначе клонируем их
+
+Так как [.language-rust]`this: &mut`, то не может быть других `&Rc<T>`
+
+Можно писать неизменяемые структуры данных, поддерживающие in-place модификацию (clone-on-write)
+
+== !
+
+.В функциональных языках:
+[source]
+----
+insert :: set -> a -> set
+----
+
+.В Rust:
+[source,rust]
+----
+
+#[derive(Clone)] // O(1)
+struct Set<T> { /* Rc */ }
+
+impl<T: Clone> Set<T> {
+    fn insert(&mut self, value: T) { ... }
+}
+----
+
+- из-за [.language-rust]`&mut` `Vec` так же надёжен, как и cons-list
+- можно менять `std::Vec` на `im::Vector` без изменения API!
+- http://smallcultfollowing.com/babysteps/blog/2018/02/01/in-rust-ordinary-vectors-are-values/
+- https://docs.rs/im/
+
+
+== std::borrow::Cow
+
+.`Cow` хранит либо ссылку с вж [.language-rust]`'a`, либо значение:
+[source,rust]
+----
+pub enum Cow<'a, B>
+where
+    B: ToOwned + ?Sized + 'a,
+{
+    Borrowed(&'a B),
+    Owned(<B as ToOwned>::Owned),
+}
+
+pub trait ToOwned {
+    type Owned: Borrow<Self>;
+
+    fn to_owned(&self) -> Self::Owned;
+}
+
+pub trait Borrow<Borrowed: ?Sized> {
+    fn borrow(&self) -> &Borrowed;
+}
+----
+
+== ToOwned
+
+`X: Borrow<Y>` -- из `X` можно получить `&Y`, согласованную по `Eq`, `Hash`, `Ord`
+
+`ToOwned` -- противоположность `Borrow`, из ссылки получаем значение
+
+[source,rust]
+----
+impl ToOwned for str {
+    type Owned = String;
+}
+
+impl<T: Clone> ToOwned for [T] {
+    type Owned = Vec<T>;
+}
+----
+
+== Cow
+
+[source,rust]
+----
+include::code/cow_lower.rs[]
+----
+
+
+Если `s` и так в нижнем регистре -- экономим аллокацию
+
+== !
+
+[source,rust]
+----
+pub fn search_case_insensitive(s: &str) -> bool {
+    let s: String = s.to_lowercase(); // аллоцируем всегда
+    search_lowercased(&s);
+}
+
+fn search_lowercased(s: &str) -> bool {
+    ...
+}
+----
+
+Хотим написать поиск без учёта регистра. Для этого приводим и данные, и паттерн
+в нижний регистр
+
+
+== !
+
+[source,rust,subs="+quotes"]
+----
+pub fn search_case_insensitive(s: &str) -> bool {
+    let s: &str = if is_lowercase(s) {
+        s
+    } else {
+        [hl-error]##&s.to_lowercase()## // ссылка на локальную переменную
+    };
+    search_lowercased(&s);
+}
+
+fn search_lowercased(s: &str) -> bool {
+    ...
+}
+----
+
+== !
+
+[source,rust,subs="+quotes"]
+----
+pub fn search_case_insensitive(s: &str) -> bool {
+    if is_lowercase(s) {
+        search_lowercased(s) // немного дублирования
+    } else {
+        search_lowercased(&s.to_lowercase())
+    }
+}
+
+fn search_lowercased(s: &str) -> bool {
+    ...
+}
+----
+
+== !
+
+[source,rust,subs="+quotes"]
+----
+pub fn search_case_insensitive(s: &str) -> bool {
+    let s: Cow<str> = to_lowercase(s); // нет аллокации
+    search_lowercased(&*s); // runtime проверка варианта при Deref
+}
+
+fn search_lowercased(s: &str) -> bool {
+    ...
+}
+----
+
+== !
+
+[source,rust,subs="+quotes"]
+----
+pub fn search_case_insensitive(s: &str) -> bool {
+    let lowercased: String;
+    let s: &str = if is_lowercase(s) {
+        s
+    } else {
+        lowercased = s.to_lowercase();
+        &lowercased
+    };
+    search_lowercased(&s);
+}
+
+fn search_lowercased(s: &str) -> bool {
+    ...
+}
+----
+
+TIP: Всегда можно расширить время жизни локальной переменной до всей функции, не
+обязательно её инициализировать
+
+
